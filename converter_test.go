@@ -195,6 +195,57 @@ func Beta() int {
 	}
 }
 
+func TestConvertMethodLookupSkipsCurrentFolderPrefix(t *testing.T) {
+	tmp := t.TempDir()
+	repoDir := filepath.Join(tmp, "go-cobertura")
+	srcDir := filepath.Join(repoDir, "pkg")
+	if err := os.MkdirAll(srcDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	srcPath := filepath.Join(srcDir, "a.go")
+	src := `package pkg
+
+func Alpha() int {
+	return 1
+}
+`
+	if err := os.WriteFile(srcPath, []byte(src), 0o644); err != nil {
+		t.Fatalf("write source: %v", err)
+	}
+
+	// coverage filename includes current folder name prefix ("go-cobertura/...")
+	in := "mode: count\n" +
+		"go-cobertura/pkg/a.go:3.1,4.2 1 1\n"
+
+	var out bytes.Buffer
+	err := Convert(strings.NewReader(in), &out, Options{
+		BranchRateDefault: 0,
+		SourceRoot:        repoDir,
+		Now:               time.Unix(4000, 0),
+	})
+	if err != nil {
+		t.Fatalf("Convert() error = %v", err)
+	}
+
+	var doc coberturaCoverage
+	if err := xml.Unmarshal(out.Bytes(), &doc); err != nil {
+		t.Fatalf("unmarshal xml: %v\n%s", err, out.String())
+	}
+
+	class := doc.Packages.Package[0].Classes.Class[0]
+	foundAlpha := false
+	for _, m := range class.Methods.Method {
+		if m.Name == "Alpha" {
+			foundAlpha = true
+			break
+		}
+	}
+	if !foundAlpha {
+		t.Fatalf("expected method name Alpha, got %+v", class.Methods.Method)
+	}
+}
+
 func BenchmarkConvertLargeProfile(b *testing.B) {
 	var sb strings.Builder
 	sb.WriteString("mode: count\n")

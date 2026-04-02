@@ -280,6 +280,24 @@ func resolveSourcePath(rawFilename, normalizedFilename string, opts Options) (st
 	}
 
 	if opts.BaseDir != "" {
+		baseDirName := ""
+		if absBase, err := filepath.Abs(opts.BaseDir); err == nil {
+			baseDirName = filepath.Base(absBase)
+		}
+
+		trimmedCandidates := make([]string, 0, len(candidates))
+		for _, c := range candidates {
+			if c == "" || filepath.IsAbs(c) {
+				continue
+			}
+			trimmed := trimLeadingDirName(c, baseDirName)
+			if trimmed != "" && trimmed != c {
+				trimmedCandidates = append(trimmedCandidates, trimmed)
+				debugf(opts.Debugf, "convert: trimmed base dir prefix %q -> %q", c, trimmed)
+			}
+		}
+		candidates = append(candidates, trimmedCandidates...)
+
 		baseCandidates := make([]string, 0, len(candidates))
 		for _, c := range candidates {
 			if c == "" || filepath.IsAbs(c) {
@@ -340,4 +358,26 @@ func debugf(logf func(format string, args ...any), format string, args ...any) {
 		return
 	}
 	logf(format, args...)
+}
+
+func trimLeadingDirName(path, dirName string) string {
+	if dirName == "" || dirName == "." || dirName == "/" {
+		return path
+	}
+
+	p := toSlash(filepath.Clean(path))
+	p = strings.TrimPrefix(p, "./")
+	p = strings.TrimPrefix(p, "/")
+	d := toSlash(filepath.Clean(dirName))
+	d = strings.TrimPrefix(d, "./")
+	d = strings.TrimPrefix(d, "/")
+	if d == "" || d == "." {
+		return path
+	}
+
+	prefix := d + "/"
+	if strings.HasPrefix(p, prefix) {
+		return strings.TrimPrefix(p, prefix)
+	}
+	return path
 }
