@@ -6,8 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
-
-	gocobertura "github.com/murli-n/go-cobertura"
+	"time"
 )
 
 func main() {
@@ -45,10 +44,11 @@ func main() {
 		logger = log.New(os.Stderr, "go-cobertura debug: ", log.LstdFlags|log.Lmicroseconds)
 	}
 
-	if err := gocobertura.Convert(in, out, gocobertura.Options{
+	if err := Convert(in, out, Options{
 		PathStripPrefix:   pathStripPrefix,
 		BranchRateDefault: branchRateDefault,
 		SourceRoot:        sourceRoot,
+		Now:               time.Now(),
 		Logger:            logger,
 	}); err != nil {
 		fail(err)

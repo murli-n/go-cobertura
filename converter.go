@@ -1,4 +1,4 @@
-package gocobertura
+package main
 
 import (
 	"fmt"

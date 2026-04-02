@@ -2,7 +2,7 @@
 
 Native Go coverage (`coverage.out`) to Cobertura XML converter.
 
-`go-cobertura` is a modern, zero-legacy-dependency library and CLI that converts Go coverage profiles directly into Cobertura-compatible XML for CI systems such as GitLab, Azure DevOps, and Jenkins.
+`go-cobertura` is a modern, zero-legacy-dependency CLI that converts Go coverage profiles directly into Cobertura-compatible XML for CI systems such as GitLab, Azure DevOps, and Jenkins.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ Native Go coverage (`coverage.out`) to Cobertura XML converter.
 - Parse Go coverage profiles (`Go 1.25.0+`) without intermediate JSON or subprocess pipelines.
 - Produce deterministic Cobertura XML suitable for automated CI ingestion.
 - Keep implementation lightweight and fast (stdlib-first design).
-- Expose both a reusable library API and a simple CLI.
+- Provide a simple, script-friendly CLI.
 
 ## Non-Goals
 
@@ -54,14 +54,12 @@ flowchart TD
 
 ```text
 .
-├── cmd/
-│   └── go-cobertura/
-│       └── main.go
 ├── internal/
 │   ├── parser/
 │   ├── cobertura/
 │   └── convert/
 ├── testdata/
+├── main.go
 ├── converter.go
 ├── go.mod
 └── README.md
@@ -74,24 +72,26 @@ go test -coverprofile=coverage.out ./...
 go-cobertura -in=coverage.out -out=coverage.xml
 ```
 
+Install:
+
+```bash
+go install github.com/murli-n/go-cobertura@latest
+```
+
 Flags:
 
 - `-in` input profile path (default: stdin)
 - `-out` output XML path (default: stdout)
 - `-path-strip-prefix` rewrite paths for CI portability
+- `-source-root` override `<sources><source>` in Cobertura XML (default: current working directory)
+- `-branch-rate-default` set default branch-rate when branch data is unavailable
 - `-debug` enable debug logs on stderr
 
-## Library API
+Quick run without install:
 
-```go
-func Convert(r io.Reader, w io.Writer, opts Options) error
+```bash
+go run . -in=coverage.out -out=coverage.xml
 ```
-
-Behavior:
-
-- Reads Go coverage profile from `r`.
-- Converts using native parser + aggregator.
-- Writes Cobertura XML to `w` with deterministic ordering.
 
 ## Development Phases
 

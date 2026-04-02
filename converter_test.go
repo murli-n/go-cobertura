@@ -1,4 +1,4 @@
-package gocobertura
+package main
 
 import (
 	"bytes"
@@ -39,7 +39,7 @@ type coberturaCoverage struct {
 							Name string `xml:"name,attr"`
 						} `xml:"method"`
 					} `xml:"methods"`
-					Lines      struct {
+					Lines struct {
 						Line []struct {
 							Number int   `xml:"number,attr"`
 							Hits   int64 `xml:"hits,attr"`
